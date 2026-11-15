@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  labels:
+    app: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:16
+        command: ["sh", "-c", "until pg_isready -h postgres -U webapp; do sleep 2; done"]
+      containers:
+      - name: webapp
+        image: DOCKERHUB_USER/kubernetes-task2:v1
+        env:
+        - name: DATABASE_HOST
+          value: postgres
+        - name: DATABASE_NAME
+          value: webapp
+        - name: DATABASE_USER
+          value: webapp
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: webapp-secret
+              key: POSTGRES_PASSWORD
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: webapp-secret
+              key: SECRET_KEY_BASE
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+spec:
+  selector:
+    app: webapp
+  ports:
+  - port: 80
+    targetPort: 3000
