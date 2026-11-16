@@ -20,7 +20,7 @@ spec:
         command: ["sh", "-c", "until pg_isready -h postgres -U webapp; do sleep 2; done"]
       containers:
       - name: webapp
-        image: DOCKERHUB_USER/kubernetes-task2:v1
+        image: ghcr.io/deep-ua/kubernetes-task2:v1
         env:
         - name: DATABASE_HOST
           value: postgres
